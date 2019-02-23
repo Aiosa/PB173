@@ -1,0 +1,22 @@
+EMBEDTLS integrity check:
+
+embedTLS published SHA1 checksum:
+3df7b6f791b74361056c7e213585ba18cdef2fb8
+
+command> gpg --print-md SHA1 mbedtls-2.16.0-gpl.tgz
+command> mbedtls-2.16.0-gpl.tgz: 3DF7 B6F7 91B7 4361 056C  7E21 3585 BA18 CDEF 2FB8
+
+________________________________
+
+OPENSSL signature verification:
+1. getting public key from http://pool.sks-keyservers.net:11371/pks/lookup?op=get&search=0x8657ABB260F056B1E5190839D9C4D26D0E604491
+2. import to gpg as: gpg --import keyfile.pub (into file copied contents from url above)
+3. signature verification: gpg --verify openssl-1.0.2q.tar.gz.asc	openssl-1.0.2q.tar.gz
+
+output:
+gpg: Podpis vytvoýen 11/20/18 14:45:23 Støední Evropa (bìžný èas)
+gpg:                pou§it¡ RSA kl¡Ÿe 8657ABB260F056B1E5190839D9C4D26D0E604491
+gpg: Dobrì podpis od "Matt Caswell <matt@openssl.org>" [nezn mì form t]
+gpg:                 alias "Matt Caswell <frodo@baggins.org>" [nezn mì form t]
+gpg: Tento kl¡Ÿ nen¡ certifikov n d…vØryhodnìm podpisem. Nic nenaznaŸuje tomu, §e tento podpis patý¡ vlastn¡kovi kl¡Ÿe.
+Otisk prim rn¡ho kl¡Ÿe: 8657 ABB2 60F0 56B1 E519  0839 D9C4 D26D 0E60 4491

@@ -34,7 +34,6 @@ void save_n(std::ofstream &out, unsigned char *data, size_t n) {
     out.write((char *) data, n);
 }
 
-
 std::string hex_from_byte(unsigned char value) {
     switch (value) {
         case 0x0:
@@ -171,7 +170,7 @@ void getIV() {
 
     std::string rand{"some_random_sequence"};
     //unsafe, but we use C library anyway
-    const unsigned char *salt = (const unsigned char *) rand.c_str();
+    auto *salt = (const unsigned char *) rand.c_str();
     mbedtls_ctr_drbg_init( &ctr_drbg );
 
     if( mbedtls_ctr_drbg_seed( &ctr_drbg , mbedtls_entropy_func, &entropy, salt, rand.length() ) != 0 ) {
@@ -349,4 +348,3 @@ int main(int argc, char *argv[]) {
         printApplicationHelp(a, cout);
     }
 }
-
