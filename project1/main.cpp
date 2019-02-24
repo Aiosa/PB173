@@ -101,14 +101,12 @@ void decrypt(std::ifstream &in, std::ofstream &out, unsigned char key[16], unsig
     save_n(out, fin, fin_len);
 }
 
-
 void get16byte(unsigned char *out, const std::string &source) {
     if (source.length() != 32) {
         throw std::runtime_error("Wrong key or init vector - must be 16 bytes, e.g. 32 hex chars.\n");
     }
     HexUtils::hex_to_char(source, out);
 }
-
 
 int main(int argc, char *argv[]) {
     std::vector<CommandLineArgument> appArgs = {

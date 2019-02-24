@@ -33,7 +33,7 @@ class Random {
 public:
     Random() : Random("some_random_sequence") {}
 
-    explicit Random(std::string salt) {
+    explicit Random(const std::string& salt) {
         mbedtls_entropy_init( &_entropy );
         mbedtls_ctr_drbg_init( &_ctr_drbg );
 
