@@ -4,6 +4,8 @@ add_executable(project1
         main.cpp
         ApplicationHelp.hpp
         CommandLineArgument.hpp
+        CipherWrapper.h
+        HexUtils.h
         Print.cpp
         Print.hpp
         )
