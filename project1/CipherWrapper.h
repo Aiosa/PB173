@@ -114,16 +114,15 @@ public:
     //ONLY THESE ARE NEEDED
     //*****************
     void init(unsigned char* key, size_t len, Operation mode) {
-        reset();
-        setKey(key, len, static_cast<mbedtls_operation_t>(mode));
+        unsigned char iv[IVlen]{};
         std::cout << "Note: using zero filled init vector.\n";
+        init(key, len, iv, (size_t)IVlen, mode);
     }
 
     void init(unsigned char* key, size_t len, Operation mode, Padding padding) {
-        reset();
-        mbedtls_cipher_set_padding_mode(&_context, static_cast<mbedtls_cipher_padding_t>(padding));
-        setKey(key, len,  static_cast<mbedtls_operation_t>(mode) );
+        unsigned char iv[IVlen]{};
         std::cout << "Note: using zero filled init vector.\n";
+        init(key, len, iv, (size_t)IVlen, mode, padding);
     }
 
     void init(unsigned char* key, size_t key_len, const unsigned char* vector, size_t vec_len, Operation mode) {
@@ -157,16 +156,15 @@ public:
     //** MORE C++ like approach
 
     void init(const std::vector<unsigned char>& key, Operation mode) {
-        reset();
-        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
+        const std::vector<unsigned char>iv(16);
         std::cout << "Note: using zero filled init vector.\n";
+        init(key, iv, mode);
     }
 
     void init(const std::vector<unsigned char>& key, Operation mode, Padding padding) {
-        reset();
-        mbedtls_cipher_set_padding_mode(&_context, static_cast<mbedtls_cipher_padding_t>(padding));
-        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
+        const std::vector<unsigned char>iv(16);
         std::cout << "Note: using zero filled init vector.\n";
+        init(key, iv, mode, padding);
     }
 
     void init(const std::vector<unsigned char>& key, const std::vector<unsigned char>& iv, Operation mode) {
