@@ -26,8 +26,8 @@ add_test(test test_project1 COMMAND test_project1)
 add_custom_target(
         TEST_LAUNCH
         COMMAND ${CMAKE_COMMAND} -E echo "Running test..."
-        COMMAND /project1/test_project1
-        DEPENDS /project1/test_project1
+        COMMAND project1/test_project1
+        DEPENDS project1/test_project1
         COMMAND ${CMAKE_COMMAND} -E echo "Done."
         WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
         )
