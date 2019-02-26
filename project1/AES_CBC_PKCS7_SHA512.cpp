@@ -3,7 +3,7 @@
 //
 #include "AES_CBC_PKCS7_SHA512.hpp"
 
-void write_n(std::ostream &out, unsigned char *data, int length) {
+void write_n(std::ostream &out, unsigned char *data, size_t length) {
     out.write((char *) data, length);
 }
 
