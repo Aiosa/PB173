@@ -105,10 +105,9 @@ struct HexUtils {
             std::cerr << "Invalid conversion from even length hex string.";
             return;
         }
-        for (size_t i = 0; i < hex.length(); i++) {
-            out[i] = byte_from_hex(hex[i]) << 4;
-            ++i;
-            out[i] |= byte_from_hex(hex[i]);
+        for (size_t i = 0; i < hex.length(); i += 2) {
+            out[i / 2] = byte_from_hex(hex[i]) << 4;
+            out[i / 2] |= byte_from_hex(hex[i + 1]);
         }
     }
 };
