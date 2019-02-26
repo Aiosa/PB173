@@ -22,8 +22,8 @@ enum class Padding {
     PKCS7 = MBEDTLS_PADDING_PKCS7,                 /**< PKCS7 padding (default).        */
     ONE_AND_ZEROS = MBEDTLS_PADDING_ONE_AND_ZEROS, /**< ISO/IEC 7816-4 padding.         */
     ZEROS_AND_LEN = MBEDTLS_PADDING_ZEROS_AND_LEN, /**< ANSI X.923 padding.             */
-    ZEROS = MBEDTLS_PADDING_ZEROS,                 /**< Zero padding (not reversible). */
-    NONE = MBEDTLS_PADDING_NONE,                     /**< Never pad (full blocks only).   */
+    ZEROS = MBEDTLS_PADDING_ZEROS,                 /**< Zero padding (not reversible).  */
+    NONE = MBEDTLS_PADDING_NONE,                   /**< Never pad (full blocks only).   */
 };
 
 class Random {

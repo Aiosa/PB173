@@ -87,7 +87,7 @@ struct HexUtils {
         }
     }
 
-    static std::string char_to_hex(const unsigned char* buff, size_t ilen) {
+    static std::string bin_to_hex(const unsigned char* buff, size_t ilen) {
         std::string res;
         for (size_t i = 0; i < ilen; i++) {
             res += hex_from_byte(*(buff + i) >> 4) + hex_from_byte(*(buff + i) & (unsigned char)0x0F);
@@ -95,14 +95,20 @@ struct HexUtils {
         return res;
     }
 
+    static std::string bin_to_hex(const std::string& buff) {
+        return bin_to_hex((const unsigned char*) buff.data(), buff.length());
+    }
+
 //out must be at least hex / 2 bytes long
-    static void hex_to_char(const std::string& hex, unsigned char* out) {
+    static void hex_to_bin(const std::string& hex, unsigned char* out) {
         if (hex.length() % 2 == 1) {
             std::cerr << "Invalid conversion from even length hex string.";
             return;
         }
         for (size_t i = 0; i < hex.length(); i++) {
-            out[i / 2] = byte_from_hex(hex[i]) << 4 | byte_from_hex(hex[++i]);
+            out[i] = byte_from_hex(hex[i]) << 4;
+            ++i;
+            out[i] |= byte_from_hex(hex[i]);
         }
     }
 };
