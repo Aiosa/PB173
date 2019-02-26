@@ -1,3 +1,12 @@
 language: cpp
-compiler: clang
-script: cmake
+
+compiler:
+  - gcc
+  - clang
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  
+script: make
