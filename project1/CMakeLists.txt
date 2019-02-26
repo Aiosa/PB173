@@ -20,17 +20,5 @@ add_executable(test_p1
         ${SOURCE}
         )
 target_link_libraries(test_p1 "-L${CMAKE_SOURCE_DIR}/libs/static -lmbedtls -lmbedx509 -lmbedcrypto -mwindows")
-add_test(test_p1 ${CMAKE_CURRENT_BINARY_DIR}/test_p1 -VV)
-
-#add_custom_target(
-#        run_test
-#        COMMAND ${CMAKE_COMMAND} -E echo_append "Running test..."
-#        COMMAND project1/test_project
-#        DEPENDS test_project
-#        COMMAND ${CMAKE_COMMAND} -E echo "Done."
-#        WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
-#        )
-
-
-
+add_test(test_p1_run test_p1)
 
