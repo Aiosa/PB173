@@ -21,16 +21,16 @@ add_executable(test_project
         ${SOURCE}
         )
 target_link_libraries(test_project "-L${CMAKE_SOURCE_DIR}/libs/static -lmbedtls -lmbedx509 -lmbedcrypto -mwindows")
-add_test(test test_project COMMAND test_project1)
+add_test(test test_project COMMAND project1/test_project1)
 
-add_custom_target(
-        run_test
-        COMMAND ${CMAKE_COMMAND} -E echo_append "Running test..."
-        COMMAND project1/test_project
-        DEPENDS test_project
-        COMMAND ${CMAKE_COMMAND} -E echo "Done."
-        WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
-        )
+#add_custom_target(
+#        run_test
+#        COMMAND ${CMAKE_COMMAND} -E echo_append "Running test..."
+#        COMMAND project1/test_project
+#        DEPENDS test_project
+#        COMMAND ${CMAKE_COMMAND} -E echo "Done."
+#        WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+#        )
 
 
 
