@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Aiosa/PB173.svg?branch=master)](https://travis-ci.org/Aiosa/PB173)
+
 # PB173
 
 C++ project bundle for PB173 course.
