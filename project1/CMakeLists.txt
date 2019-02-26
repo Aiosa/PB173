@@ -14,14 +14,13 @@ set( SOURCE
 add_executable(project1 main.cpp ${SOURCE})
 target_link_libraries(project1 "-L${CMAKE_SOURCE_DIR}/libs/static -lmbedtls -lmbedx509 -lmbedcrypto -mwindows")
 
-enable_testing()
 add_executable(test_p1
         test/test-main.cpp
         test/test-impl.cpp
         ${SOURCE}
         )
 target_link_libraries(test_p1 "-L${CMAKE_SOURCE_DIR}/libs/static -lmbedtls -lmbedx509 -lmbedcrypto -mwindows")
-add_test(test_l test_p1 COMMAND project1/test_p1)
+add_test(run test_p1 COMMAND project1/test_p1)
 
 #add_custom_target(
 #        run_test

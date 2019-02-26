@@ -8,4 +8,4 @@ before_script:
   - cd build
   - cmake ..
   
-script: make project1 test_p1 test_l
+script: make && make test
