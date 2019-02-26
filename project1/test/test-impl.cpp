@@ -26,7 +26,7 @@ TEST_CASE("SHA-512") {
     std::stringstream abc{"abc"};
     CHECK(hash_sha512(abc) == toUpper(
             "ddaf35a193617abacc417349ae204131"
-            "12e6fa4e89a97ea0a9eeee64b55d39a"
+            "12e6fa4e89a97ea20a9eeee64b55d39a"
             "2192992a274fc1a836ba3c23a3feebbd"
             "454d4423643ce80e2a9ac94fa54ca49f" )
     );
