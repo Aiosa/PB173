@@ -1,7 +1,6 @@
 #include "catch.hpp"
 
 #include <sstream>
-#include <experimental/filesystem>
 
 #include "../AES_CBC_PKCS7_SHA512.hpp"
 
@@ -286,6 +285,19 @@ TEST_CASE("ALL: AES-128 custom msg with PKCS7 padding") {
 
             std::stringstream output;
             CHECK_THROWS_AS(decrypt(encrypted, output, key_wrong, iv, Padding::PKCS7, false), std::runtime_error);
+        }
+
+        SECTION("corrupted encryption") {
+            std::stringstream encrypted;
+            encrypt(input, encrypted, key, iv, Padding::PKCS7, false, std::cout);
+
+            encrypted.seekg(20);
+            Random random{};
+            std::vector<unsigned char> rand = random.get<22>();
+            encrypted.write((char*)rand.data(), 22);
+
+            std::stringstream output;
+            CHECK_THROWS_AS(decrypt(encrypted, output, key, iv, Padding::PKCS7, false), std::runtime_error);
         }
     }
 }
