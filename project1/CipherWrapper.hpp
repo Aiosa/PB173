@@ -5,6 +5,7 @@
 #define PB173_CIPHERWRAPPER_H
 
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 #include "mbedtls/cipher.h"
