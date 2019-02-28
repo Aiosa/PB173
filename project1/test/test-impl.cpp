@@ -424,12 +424,7 @@ TEST_CASE("FILE errors") {
     CHECK(app(5, std::vector<std::string>{"program.exe", "long.txt", "no_permissions.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout) == 1);
 
     //corrupted file
-    app(5, std::vector<std::string>{"program.exe", "corrupted.txt", "out_corrupt.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout);
-    std::ifstream input1{"long.txt"};
-    std::ifstream input2{"out_corrupt.txt"};
-    std::string original(std::istreambuf_iterator<char>(input1), {});
-    std::string computed(std::istreambuf_iterator<char>(input2), {});
-    CHECK(original != computed);
+    CHECK_THROWS_AS(app(5, std::vector<std::string>{"program.exe", "corrupted.txt", "out_corrupt.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout), std::runtime_error);
 }
 
 
