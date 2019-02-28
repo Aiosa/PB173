@@ -7,8 +7,15 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
+
 
 struct HexUtils {
+    static std::string toUpper(std::string lowercase) {
+        std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(), ::toupper);
+        return lowercase;
+    }
+
     static std::string hex_from_byte(unsigned char value) {
         switch (value) {
             case 0x0:
@@ -44,12 +51,12 @@ struct HexUtils {
             case 0xF:
                 return "F";
             default:
-                return "";
+                throw std::runtime_error("cannot convert value " + std::to_string(value) +  " from hex to byte");
         }
     }
 
     static unsigned char byte_from_hex(char hex) {
-        switch (hex) {
+        switch (toupper(hex)) {
             case '0':
                 return 0x0;
             case '1':
@@ -83,12 +90,12 @@ struct HexUtils {
             case 'F':
                 return 0xF;
             default:
-                return 0x0;
+                throw std::runtime_error("cannot convert value " + std::to_string(hex) +  " from byte to hex");
         }
     }
 
     static std::string bin_to_hex(const unsigned char* buff, size_t ilen) {
-        std::string res;
+        std::string res{};
         for (size_t i = 0; i < ilen; i++) {
             res += hex_from_byte(*(buff + i) >> 4) + hex_from_byte(*(buff + i) & (unsigned char)0x0F);
         }
@@ -99,7 +106,8 @@ struct HexUtils {
         return bin_to_hex((const unsigned char*) buff.data(), buff.length());
     }
 
-//out must be at least hex / 2 bytes long
+    //out must be at least hex / 2 bytes long
+    //accepts both upper and lower case
     static void hex_to_bin(const std::string& hex, unsigned char* out) {
         if (hex.length() % 2 == 1) {
             std::cerr << "Invalid conversion from even length hex string.";
@@ -108,6 +116,17 @@ struct HexUtils {
         for (size_t i = 0; i < hex.length(); i += 2) {
             out[i / 2] = byte_from_hex(hex[i]) << 4;
             out[i / 2] |= byte_from_hex(hex[i + 1]);
+        }
+    }
+
+    static void hex_to_bin(unsigned char* in, size_t ilen, unsigned char* out, size_t olen) {
+        if (ilen % 2 == 1 || olen != ilen / 2) {
+            std::cerr << "Invalid conversion from even length hex string.";
+            return;
+        }
+        for (size_t i = 0; i < ilen; i += 2) {
+            out[i / 2] = byte_from_hex(in[i]) << 4;
+            out[i / 2] |= byte_from_hex(in[i + 1]);
         }
     }
 };

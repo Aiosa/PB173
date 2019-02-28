@@ -13,6 +13,12 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     set(CMAKE_CXX_FLAGS "/std:c++14 /permissive- /W4 /EHsc")
 endif()
 
+if (WIN32)
+    set(MBED_TLS "-L${CMAKE_SOURCE_DIR}/libs/static/windows -lmbedtls -lmbedx509 -lmbedcrypto")# -mwindows
+else(WIN32)
+    set(MBED_TLS "-L${CMAKE_SOURCE_DIR}/libs/static/linux -lmbedtls -lmbedx509 -lmbedcrypto")
+endif(WIN32)
+
 enable_testing()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/project1)

@@ -8,34 +8,36 @@
 #include <ostream>
 #include <vector>
 #include <fstream>
-#include <cstring>
-#include <algorithm>
 
-#include "mbedtls/sha512.h"
 
 #include "CipherWrapper.hpp"
-#include "HexUtils.hpp"
+#include "SHAWrapper.hpp"
+#include "Print.hpp"
 
 template<size_t len>
 size_t read_n(std::istream &in, unsigned char *data) {
-    char temp[len];
-    in.read(temp, len);
-    std::transform(temp, temp + len, data, [](const char &c) {
-        return static_cast<unsigned char>(c);
-    });
-    return static_cast<size_t >(in.gcount());
+    //char temp[len];
+    in.read((char *) data, len);
+    //the "nice way"
+//    std::transform(temp, temp + len, data, [](const char &c) {
+//        return static_cast<unsigned char>(c);
+//    });
+    return static_cast<size_t>(in.gcount());
 }
 
-void write_n(std::ostream &out, unsigned char *data, int length);
+void write_n(std::ostream &, unsigned char *, size_t);
 
-std::string hash_sha512(std::istream &in);
+std::string hash_sha512(std::istream &);
 
-bool verify_sha512(std::istream &in, std::ostream &out, const std::string &hash);
+bool verify_sha512(std::istream &, std::ostream &, const std::string &);
 
-void encrypt(std::istream &in, std::ostream &out, unsigned char key[16], unsigned char vector[16]);
+void encrypt(std::istream &, std::ostream &, const std::string &, const std::string &, Padding, bool);
 
-void decrypt(std::istream &in, std::ostream &out, unsigned char key[16], unsigned char iv[16]);
+void decrypt(std::istream &, std::ostream &, const std::string &, const std::string &, Padding, bool);
 
-void get16byte(unsigned char *out, const std::string &source);
+void get16byte(unsigned char *, const std::string &);
+
+//to exclude main from testing
+int app(int, const std::vector<std::string> &);
 
 #endif //PB173_AES_CBC_PKCS7_H

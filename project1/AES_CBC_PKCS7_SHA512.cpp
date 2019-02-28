@@ -8,27 +8,15 @@ void write_n(std::ostream &out, unsigned char *data, size_t length) {
 }
 
 std::string hash_sha512(std::istream &in) {
-    mbedtls_sha512_context context;
-
-    mbedtls_sha512_init(&context);
-    mbedtls_sha512_starts_ret(&context, 0); //SHA-512 constant missing - 0
+    SHAWrapper wrapper{SHA::S512};
 
     while (in.good()) {
         unsigned char input[256];
         size_t in_len = read_n<256>(in, input);
-        if (mbedtls_sha512_update_ret(&context, input, in_len) != 0) {
-            std::cerr << "Fail";
-            return "Failed";
-        }
+        wrapper.feed(input, in_len);
     }
 
-    unsigned char result[64];
-    if (mbedtls_sha512_finish_ret(&context, result) != 0) {
-        std::cerr << "Fail";
-        return "Failed";
-    }
-    mbedtls_sha512_free(&context);
-    return HexUtils::bin_to_hex(result, 64);
+    return wrapper.finish();
 }
 
 bool verify_sha512(std::istream &in, std::ostream &out, const std::string &hash) {
@@ -38,16 +26,25 @@ bool verify_sha512(std::istream &in, std::ostream &out, const std::string &hash)
     return hash_sha512(in) == hash;
 }
 
-void encrypt(std::istream &in, std::ostream &out, unsigned char key[16], unsigned char vector[16]) {
+void encrypt(std::istream &in, std::ostream &out,
+             const std::string& key, const std::string& iv,
+             Padding padding, bool hex) {
+
+    unsigned char key_bytes[16];
+    get16byte(key_bytes, key);
+
     CipherWrapper<16, 16> wrapper{MBEDTLS_CIPHER_AES_128_CBC};
 
-    if (vector == nullptr) {
+    if (iv.empty()) {
         Random random{};
-        std::vector<unsigned char> iv = random.get<16>();
-        wrapper.init(key, 16, iv.data(), 16, Operation::ENCRYPT, Padding::PKCS7);
+        std::vector<unsigned char> new_iv = random.get<16>();
+        wrapper.init(key_bytes, 16, new_iv.data(), 16, Operation::ENCRYPT, padding);
     } else {
-        wrapper.init(key, 16, vector, 16, Operation::ENCRYPT, Padding::PKCS7);
+        unsigned char iv_bytes[16];
+        get16byte(iv_bytes, iv);
+        wrapper.init(key_bytes, 16, iv_bytes, 16, Operation::ENCRYPT, padding);
     }
+
     while (in.good()) {
         unsigned char input[256];
         size_t in_len = read_n<256>(in, input);
@@ -55,24 +52,46 @@ void encrypt(std::istream &in, std::ostream &out, unsigned char key[16], unsigne
         size_t out_len;
 
         wrapper.feed(input, in_len, output, &out_len);
-        write_n(out, output, out_len);
+        if (hex)
+            out << HexUtils::bin_to_hex(output, out_len);
+        else
+            write_n(out, output, out_len);
     }
     unsigned char fin[16];
     size_t fin_len;
     wrapper.finish(fin, &fin_len);
-    write_n(out, fin, fin_len);
+    if (hex) {
+        out << HexUtils::bin_to_hex(fin, fin_len);
+    } else {
+        write_n(out, fin, fin_len);
+    }
+
 }
 
-void decrypt(std::istream &in, std::ostream &out, unsigned char key[16], unsigned char iv[16]) {
+void decrypt(std::istream &in, std::ostream &out,
+             const std::string& key, const std::string& iv,
+             Padding padding, bool hex) {
+
+    unsigned char key_bytes[16];
+    get16byte(key_bytes, key);
+    unsigned char iv_bytes[16];
+    get16byte(iv_bytes, iv);
+
     CipherWrapper<16, 16> wrapper{MBEDTLS_CIPHER_AES_128_CBC};
-    wrapper.init(key, 16, iv, 16, Operation::DECRYPT, Padding::PKCS7);
+    wrapper.init(key_bytes, 16, iv_bytes, 16, Operation::DECRYPT, padding);
     while (in.good()) {
         unsigned char input[256];
         size_t in_len = read_n<256>(in, input);
         unsigned char output[272]{}; //256 + block size length
         size_t out_len;
 
-        wrapper.feed(input, in_len, output, &out_len);
+        if (hex) {
+            unsigned char data_bin[128];
+            HexUtils::hex_to_bin(input, in_len, data_bin, in_len / 2);
+            wrapper.feed(data_bin, in_len / 2, output, &out_len);
+        } else {
+            wrapper.feed(input, in_len, output, &out_len);
+        }
         write_n(out, output, out_len);
     }
     unsigned char fin[16];
@@ -86,4 +105,91 @@ void get16byte(unsigned char *out, const std::string &source) {
         throw std::runtime_error("Wrong key or init vector - must be 16 bytes, e.g. 32 hex chars.\n");
     }
     HexUtils::hex_to_bin(source, out);
+}
+
+int app(int argc, const std::vector<std::string>& args) {
+    using namespace std;
+    vector<CommandLineArgument> appArgs = {
+            CommandLineArgument{'h', "help", "\tshow help", false},
+            CommandLineArgument{'e', "encrypt", "\tencyrpt given file using AES", false},
+            CommandLineArgument{'d', "decrypt", "\tdecrypt file using AES", false},
+            CommandLineArgument{'s', "hash", "\tcreate hash", false},
+            CommandLineArgument{'v', "verify", "\tverify hash, value: hash to compare", true},
+            CommandLineArgument{'r', "random", "\tgenerate random initialization vector, for encryption only", false}
+    };
+
+    ApplicationHelp a{"Crypto-project", "Jiří Horák", "description", appArgs, ApplicationVersion{1, 0},
+                      "command template: [input file] [output file] [action] [cipher: key 16 bytes, / hash: hash to compare | in hex string] [cipher only: init vector (will use zeros if not present) OR --rand for encryption only]"};
+
+    if (argc < 3) {
+        printApplicationHelp(a, cout);
+        return 0;
+    }
+
+    ifstream in{args[1], std::ios::binary | std::ios::in};
+    if (!in.is_open()) {
+        cout << "Failed to open " << args[1] << '\n';
+        return 1;
+    }
+    if (!in.good()) {
+        cout << "Failed to read from file " << args[1] << '\n';
+        return 1;
+    }
+
+    ofstream out{args[2], std::ios::binary | std::ios::out}; //std::ios::binary
+    if (!out.is_open()) {
+        cout << "Failed to write into file " << args[1] << '\n';
+        return 1;
+    }
+
+    const string &action = args[3];
+
+    if (action == "-e" || action == "--encrypt") {
+        if (argc < 5) {
+            cerr << "Key is missing.\n";
+            return 1;
+        }
+
+        if (argc == 6) {
+            //given IV - generate random or get from console
+            if (args[5] == "-r" || args[5] == "--rand") {
+                encrypt(in, out, args[4], "", Padding::PKCS7, false);
+            } else {
+                encrypt(in, out, args[4], args[5], Padding::PKCS7, false);
+            }
+        } else {
+            //zeros
+            cout << "No valid IV given, will use zeros.";
+            encrypt(in, out, args[4], "000000000000000000000000000000000", Padding::PKCS7, false);
+        }
+
+    } else if (action == "-d" || action == "--decrypt") {
+        if (argc < 5) {
+            cerr << "Key is missing or too many arguments given.\n";
+            return 1;
+        }
+        if (argc == 6) {
+            decrypt(in, out, args[4], args[5], Padding::PKCS7, false);
+        } else {
+            cout << "No valid IV given, will use zeros.";
+            decrypt(in, out, args[4], "000000000000000000000000000000000", Padding::PKCS7, false);
+        }
+
+    } else if (action == "-s" || action == "--hash") {
+        string hash = hash_sha512(in);
+        cout << hash;
+    } else if (action == "-v" || action == "--verify") {
+        if (argc != 5) {
+            cerr << "Hash to compare is missing or too many arguments given.\n";
+            return 1;
+        }
+        if (!verify_sha512(in, out, args[4])) {
+            cout << "Verification failed: given hash does not match.\n";
+        } else {
+            cout << "Verification successful.\n";
+        }
+    } else if (action == "-h" || action == "--help") {
+        printApplicationHelp(a, cout);
+    }
+    return 0;
 }

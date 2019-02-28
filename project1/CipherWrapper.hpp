@@ -84,8 +84,7 @@ public:
 
     void setInitVector(const unsigned char* vector, size_t len) {
         if (len != IVlen) {
-            std::cerr << "Invalid init vector length.\n";
-            return;
+            throw std::runtime_error("Invalid init vector length.");
         }
         if (mbedtls_cipher_set_iv(&_context, vector, len) != 0) {
             throw std::runtime_error("Failed to initialize init vector - unable to continue.");
@@ -101,8 +100,7 @@ public:
 
     void setKey(unsigned char* key, size_t len, mbedtls_operation_t mode) {
         if (len != KeyLen) {
-            std::cerr << "Invalid key length.\n";
-            return;
+            throw std::runtime_error("Invalid key length.");
         }
         if (mbedtls_cipher_setkey(&_context, key, KeyLen * 8, mode) != 0) {
             throw std::runtime_error("Failed to initialize AES key - unable to continue.");
@@ -139,7 +137,7 @@ public:
     }
 
     void feed(unsigned char* data, size_t dataLen, unsigned char* result, size_t* result_len) {
-        if (! (OK & 0x02) ) {
+        if ((OK & 0x03) != 0x03)  {
             throw std::runtime_error("Cipher not initialized properly.");
         }
         if (mbedtls_cipher_update(&_context, data, dataLen, result, result_len) != 0) {
@@ -154,52 +152,51 @@ public:
     }
 
     //** MORE C++ like approach
-
-    void init(const std::vector<unsigned char>& key, Operation mode) {
-        const std::vector<unsigned char>iv(16);
-        std::cout << "Note: using zero filled init vector.\n";
-        init(key, iv, mode);
-    }
-
-    void init(const std::vector<unsigned char>& key, Operation mode, Padding padding) {
-        const std::vector<unsigned char>iv(16);
-        std::cout << "Note: using zero filled init vector.\n";
-        init(key, iv, mode, padding);
-    }
-
-    void init(const std::vector<unsigned char>& key, const std::vector<unsigned char>& iv, Operation mode) {
-        reset();
-        setInitVector(iv.data(), iv.size());
-        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
-    }
-
-    void init(const std::vector<unsigned char>& key, const std::vector<unsigned char>& iv, Operation mode, Padding padding) {
-        reset();
-        mbedtls_cipher_set_padding_mode(&_context, static_cast<mbedtls_cipher_padding_t>(padding));
-        setInitVector(iv.data(), iv.size());
-        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
-    }
-
-    std::vector<unsigned char> feed(const std::vector<unsigned char>& data) {
-        if (! (OK & 0x02) ) {
-            throw std::runtime_error("Cipher not initialized properly.");
-        }
-        unsigned char output[data.size() + IVlen]{};
-        size_t out_len;
-        if (mbedtls_cipher_update(&_context, data.data(), data.size(), output, &out_len) != 0) {
-            throw std::runtime_error("Failed to update cipher.");
-        }
-        return std::vector<unsigned char>(output, out_len);
-    }
-
-    std::vector<unsigned char> finish() {
-        unsigned char output[2 * IVlen]{};
-        size_t out_len;
-        if (mbedtls_cipher_finish(&_context, output, &out_len) != 0) {
-            throw std::runtime_error("Failed to finish cipher.");
-        }
-        return std::vector<unsigned char>(output, out_len);
-    }
+//    void init(std::vector<unsigned char>& key, Operation mode) {
+//        const std::vector<unsigned char>iv(16);
+//        std::cout << "Note: using zero filled init vector.\n";
+//        init(key, iv, mode);
+//    }
+//
+//    void init(std::vector<unsigned char>& key, Operation mode, Padding padding) {
+//        const std::vector<unsigned char>iv(16);
+//        std::cout << "Note: using zero filled init vector.\n";
+//        init(key, iv, mode, padding);
+//    }
+//
+//    void init(std::vector<unsigned char>& key, const std::vector<unsigned char>& iv, Operation mode) {
+//        reset();
+//        setInitVector(iv.data(), iv.size());
+//        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
+//    }
+//
+//    void init(std::vector<unsigned char>& key, const std::vector<unsigned char>& iv, Operation mode, Padding padding) {
+//        reset();
+//        mbedtls_cipher_set_padding_mode(&_context, static_cast<mbedtls_cipher_padding_t>(padding));
+//        setInitVector(iv.data(), iv.size());
+//        setKey(key.data(), key.size(), static_cast<mbedtls_operation_t>(mode));
+//    }
+//
+//    std::vector<unsigned char> feed(const std::vector<unsigned char>& data) {
+//        if ((OK & 0x03) != 0x03) {
+//            throw std::runtime_error("Cipher not initialized properly.");
+//        }
+//        unsigned char output[data.size() + IVlen]{};
+//        size_t out_len;
+//        if (mbedtls_cipher_update(&_context, data.data(), data.size(), output, &out_len) != 0) {
+//            throw std::runtime_error("Failed to update cipher.");
+//        }
+//        return std::vector<unsigned char>(output, out_len);
+//    }
+//
+//    std::vector<unsigned char> finish() {
+//        unsigned char output[2 * IVlen]{};
+//        size_t out_len;
+//        if (mbedtls_cipher_finish(&_context, output, &out_len) != 0) {
+//            throw std::runtime_error("Failed to finish cipher.");
+//        }
+//        return std::vector<unsigned char>(output, out_len);
+//    }
 };
 
 #endif //PB173_CIPHERWRAPPER_H
