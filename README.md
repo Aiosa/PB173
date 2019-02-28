@@ -3,3 +3,5 @@
 # PB173
 
 C++ project bundle for PB173 course.
+
+Windows library compiled with cigwin environment, linux for clang 5.0.0

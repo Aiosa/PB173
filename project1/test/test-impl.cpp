@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <sstream>
+#include <experimental/filesystem>
 
 #include "../AES_CBC_PKCS7_SHA512.hpp"
 
@@ -113,7 +114,7 @@ TEST_CASE("ENCRYPT: AES-128 | CBC | 16 byte msg | PADDING none | hex output") {
     }
 
     std::stringstream output;
-    encrypt(input, output, key, iv, Padding::NONE, true);
+    encrypt(input, output, key, iv, Padding::NONE, true, std::cout);
     CHECK(output.str() == HexUtils::toUpper(result));
 }
 
@@ -161,7 +162,7 @@ TEST_CASE("ENCRYPT: AES-128 | CBC | 16 byte msg | PADDING none | bin output") {
     }
 
     std::stringstream output;
-    encrypt(input, output, key, iv, Padding::NONE, false);
+    encrypt(input, output, key, iv, Padding::NONE, false, std::cout);
     CHECK(HexUtils::bin_to_hex(output.str()) == HexUtils::toUpper(result));
 }
 
@@ -258,7 +259,7 @@ TEST_CASE("ALL: AES-128 custom msg with PKCS7 padding") {
 
         SECTION("hex conversion") {
             std::stringstream encrypted;
-            encrypt(input, encrypted, key, iv, Padding::PKCS7, false);
+            encrypt(input, encrypted, key, iv, Padding::PKCS7, false, std::cout);
 
             std::stringstream output;
             decrypt(encrypted, output, key, iv, Padding::PKCS7, false);
@@ -268,7 +269,7 @@ TEST_CASE("ALL: AES-128 custom msg with PKCS7 padding") {
 
         SECTION("bites only") {
             std::stringstream encrypted;
-            encrypt(input, encrypted, key, iv, Padding::PKCS7, true);
+            encrypt(input, encrypted, key, iv, Padding::PKCS7, true, std::cout);
 
             std::stringstream output;
             decrypt(encrypted, output, key, iv, Padding::PKCS7, true);
@@ -281,7 +282,7 @@ TEST_CASE("ALL: AES-128 custom msg with PKCS7 padding") {
             std::string key_wrong = "63bed6b8e3c1743b7116e69e22229516";
 
             std::stringstream encrypted;
-            encrypt(input, encrypted, key, iv, Padding::PKCS7, false);
+            encrypt(input, encrypted, key, iv, Padding::PKCS7, false, std::cout);
 
             std::stringstream output;
             CHECK_THROWS_AS(decrypt(encrypted, output, key_wrong, iv, Padding::PKCS7, false), std::runtime_error);
@@ -290,22 +291,15 @@ TEST_CASE("ALL: AES-128 custom msg with PKCS7 padding") {
 }
 
 TEST_CASE("AES lengthy errors") {
-    std::string iv;
-    std::string key;
-    std::stringstream input;
-
-    std::string msg;
-
-    iv = "30c81c46a35ce411e5fbc1191a0a52ef";
-    key = "73bed6b8e3c1743b7116e69e22229516";
-    msg = "My custom msg.";
-    input << msg;
+    std::string iv = "30c81c46a35ce411e5fbc1191a0a52ef";
+    std::string key = "73bed6b8e3c1743b7116e69e22229516";
+    std::stringstream input{"My custom msg."};
 
     SECTION("invalid key length") {
         std::string invalid_length_key = "73bed6b8e3c1743b7116e69e2222951";
         std::stringstream encrypted;
 
-        CHECK_THROWS_AS(encrypt(input, encrypted, invalid_length_key, iv, Padding::PKCS7, false), std::runtime_error);
+        CHECK_THROWS_AS(encrypt(input, encrypted, invalid_length_key, iv, Padding::PKCS7, false, std::cout), std::runtime_error);
         CHECK_THROWS_AS(decrypt(input, encrypted, invalid_length_key, iv, Padding::PKCS7, false), std::runtime_error);
     }
 
@@ -313,16 +307,66 @@ TEST_CASE("AES lengthy errors") {
         std::string invalid_length_IV = "30c81c46a35ce411e5fbc1191a";
         std::stringstream encrypted;
 
-        CHECK_THROWS_AS(encrypt(input, encrypted, key, invalid_length_IV, Padding::PKCS7, false), std::runtime_error);
+        CHECK_THROWS_AS(encrypt(input, encrypted, key, invalid_length_IV, Padding::PKCS7, false, std::cout), std::runtime_error);
         CHECK_THROWS_AS(decrypt(input, encrypted, key, invalid_length_IV, Padding::PKCS7, false), std::runtime_error);
     }
 }
 
-TEST_CASE("FILE error") {
-    //do not create if not exists
-    //CHECK(app(4, std::vector<std::string>{"program.exe", "noexistingfile", "wont_reach_here", "args"}) == 1);
-    //will create emulate access rights
-    //CHECK(app(4, std::vector<std::string>{"program.exe", "long.txt", "noexistingfile", "args"}) == 1);
+TEST_CASE("App: file encryption and decryption, custom IV") {
+    app(6, {"programpath", "long.txt", "encoded.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef", "2b7e151628aed2a6abf7158809cf4f3c"}, std::cout);
+    app(6, {"programpath", "encoded.txt", "long_res.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef", "2b7e151628aed2a6abf7158809cf4f3c"}, std::cout);
+
+    std::ifstream input1{"long.txt"};
+    std::ifstream input2{"long_res.txt"};
+
+    std::string original(std::istreambuf_iterator<char>(input1), {});
+    std::string computed(std::istreambuf_iterator<char>(input2), {});
+    CHECK(original == computed);
+}
+
+TEST_CASE("App: file encryption and decryption, random IV") {
+    std::stringstream generatedIv;
+    app(6, {"programpath", "long.txt", "encoded.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef", "--rand"}, generatedIv);
+    app(6, {"programpath", "encoded.txt", "long_res.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef", generatedIv.str()}, std::cout);
+
+    std::ifstream input1{"long.txt"};
+    std::ifstream input2{"long_res.txt"};
+
+    std::string original(std::istreambuf_iterator<char>(input1), {});
+    std::string computed(std::istreambuf_iterator<char>(input2), {});
+    CHECK(original == computed);
+}
+
+TEST_CASE("App: file encryption and decryption, no IV") {
+    std::stringstream generatedIv;
+
+    app(5, {"programpath", "long.txt", "encoded.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, generatedIv);
+    app(5, {"programpath", "encoded.txt", "long_res.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout);
+
+    std::ifstream input1{"long.txt"};
+    std::ifstream input2{"long_res.txt"};
+
+    std::string original(std::istreambuf_iterator<char>(input1), {});
+    std::string computed(std::istreambuf_iterator<char>(input2), {});
+    CHECK(original == computed);
+}
+
+TEST_CASE("FILE errors") {
+    //no such file
+    CHECK(app(4, std::vector<std::string>{"program.exe", "noexistingfile", "wont_reach_here", "args"}, std::cout) == 1);
+
+    //no permisions
+    system("chmod 000 no_permissions.txt");
+    CHECK(app(4, std::vector<std::string>{"program.exe", "no_permissions.txt", "out.txt", "args"}, std::cout) == 1);
+    CHECK(app(4, std::vector<std::string>{"program.exe", "long.txt", "no_permissions.txt", "args"}, std::cout) == 1);
+
+    //corrupted file
+    app(4, std::vector<std::string>{"program.exe", "corrupted.txt", "out_corrupt.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout);
+    std::ifstream input1{"long.txt"};
+    std::ifstream input2{"out_corrupt.txt"};
+    std::string original(std::istreambuf_iterator<char>(input1), {});
+    std::string computed(std::istreambuf_iterator<char>(input2), {});
+    CHECK(original != computed);
 }
 
 

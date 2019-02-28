@@ -28,7 +28,7 @@ bool verify_sha512(std::istream &in, std::ostream &out, const std::string &hash)
 
 void encrypt(std::istream &in, std::ostream &out,
              const std::string& key, const std::string& iv,
-             Padding padding, bool hex) {
+             Padding padding, bool hex, std::ostream& cout) {
 
     unsigned char key_bytes[16];
     get16byte(key_bytes, key);
@@ -39,6 +39,7 @@ void encrypt(std::istream &in, std::ostream &out,
         Random random{};
         std::vector<unsigned char> new_iv = random.get<16>();
         wrapper.init(key_bytes, 16, new_iv.data(), 16, Operation::ENCRYPT, padding);
+        cout << HexUtils::bin_to_hex(new_iv.data(), new_iv.size());
     } else {
         unsigned char iv_bytes[16];
         get16byte(iv_bytes, iv);
@@ -107,11 +108,11 @@ void get16byte(unsigned char *out, const std::string &source) {
     HexUtils::hex_to_bin(source, out);
 }
 
-int app(int argc, const std::vector<std::string>& args) {
-    using namespace std;
-    vector<CommandLineArgument> appArgs = {
+int app(int argc, const std::vector<std::string>& args, std::ostream& cout) {
+
+    std::vector<CommandLineArgument> appArgs = {
             CommandLineArgument{'h', "help", "\tshow help", false},
-            CommandLineArgument{'e', "encrypt", "\tencyrpt given file using AES", false},
+            CommandLineArgument{'e', "encrypt", "\tencrypt given file using AES", false},
             CommandLineArgument{'d', "decrypt", "\tdecrypt file using AES", false},
             CommandLineArgument{'s', "hash", "\tcreate hash", false},
             CommandLineArgument{'v', "verify", "\tverify hash, value: hash to compare", true},
@@ -126,61 +127,61 @@ int app(int argc, const std::vector<std::string>& args) {
         return 0;
     }
 
-    ifstream in{args[1], std::ios::binary | std::ios::in};
+    std::ifstream in{args[1], std::ios::binary | std::ios::in};
     if (!in.is_open()) {
-        cout << "Failed to open " << args[1] << '\n';
+        std::cerr << "Failed to open " << args[1] << '\n';
         return 1;
     }
     if (!in.good()) {
-        cout << "Failed to read from file " << args[1] << '\n';
+        std::cerr << "Failed to read from file " << args[1] << '\n';
         return 1;
     }
 
-    ofstream out{args[2], std::ios::binary | std::ios::out}; //std::ios::binary
+    std::ofstream out{args[2], std::ios::binary | std::ios::out}; //std::ios::binary
     if (!out.is_open()) {
-        cout << "Failed to write into file " << args[1] << '\n';
+        std::cerr << "Failed to write into file " << args[1] << '\n';
         return 1;
     }
 
-    const string &action = args[3];
+    const  std::string &action = args[3];
 
     if (action == "-e" || action == "--encrypt") {
         if (argc < 5) {
-            cerr << "Key is missing.\n";
+            std::cerr << "Key is missing.\n";
             return 1;
         }
 
         if (argc == 6) {
             //given IV - generate random or get from console
             if (args[5] == "-r" || args[5] == "--rand") {
-                encrypt(in, out, args[4], "", Padding::PKCS7, false);
+                encrypt(in, out, args[4], "", Padding::PKCS7, false, cout);
             } else {
-                encrypt(in, out, args[4], args[5], Padding::PKCS7, false);
+                encrypt(in, out, args[4], args[5], Padding::PKCS7, false, cout);
             }
         } else {
             //zeros
-            cout << "No valid IV given, will use zeros.";
-            encrypt(in, out, args[4], "000000000000000000000000000000000", Padding::PKCS7, false);
+            std::cerr << "No valid IV given, will use zeros.";
+            encrypt(in, out, args[4], "00000000000000000000000000000000", Padding::PKCS7, false, cout);
         }
 
     } else if (action == "-d" || action == "--decrypt") {
         if (argc < 5) {
-            cerr << "Key is missing or too many arguments given.\n";
+            std::cerr << "Key is missing or too many arguments given.\n";
             return 1;
         }
         if (argc == 6) {
             decrypt(in, out, args[4], args[5], Padding::PKCS7, false);
         } else {
-            cout << "No valid IV given, will use zeros.";
-            decrypt(in, out, args[4], "000000000000000000000000000000000", Padding::PKCS7, false);
+            std::cerr << "No valid IV given, will use zeros.\n";
+            decrypt(in, out, args[4], "00000000000000000000000000000000", Padding::PKCS7, false);
         }
 
     } else if (action == "-s" || action == "--hash") {
-        string hash = hash_sha512(in);
+        std::string hash = hash_sha512(in);
         cout << hash;
     } else if (action == "-v" || action == "--verify") {
         if (argc != 5) {
-            cerr << "Hash to compare is missing or too many arguments given.\n";
+            std::cerr << "Hash to compare is missing or too many arguments given.\n";
             return 1;
         }
         if (!verify_sha512(in, out, args[4])) {

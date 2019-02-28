@@ -13,11 +13,13 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     set(CMAKE_CXX_FLAGS "/std:c++14 /permissive- /W4 /EHsc")
 endif()
 
-if (WIN32)
+if (${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
     set(MBED_TLS "-L${CMAKE_SOURCE_DIR}/libs/static/windows -lmbedtls -lmbedx509 -lmbedcrypto")# -mwindows
-else(WIN32)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(MBED_TLS "-L${CMAKE_SOURCE_DIR}/libs/static/linux -lmbedtls -lmbedx509 -lmbedcrypto")
-endif(WIN32)
+else()
+    error("No support for your compiler. Use CLANG or CYGWIN")
+endif()
 
 enable_testing()
 

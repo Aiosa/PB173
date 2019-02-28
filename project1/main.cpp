@@ -6,5 +6,5 @@
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> args(argv, argv + argc);
-    return app(argc, args);
+    return app(argc, args, std::cout);
 }
