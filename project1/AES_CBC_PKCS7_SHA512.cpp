@@ -160,7 +160,7 @@ int app(int argc, const std::vector<std::string>& args, std::ostream& cout) {
             }
         } else {
             //zeros
-            std::cerr << "No valid IV given, will use zeros.";
+            std::cerr << "No valid IV given, will use zeros.\n";
             encrypt(in, out, args[4], "00000000000000000000000000000000", Padding::PKCS7, false, cout);
         }
 
