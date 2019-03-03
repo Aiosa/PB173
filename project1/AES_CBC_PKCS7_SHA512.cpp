@@ -116,11 +116,11 @@ int app(int argc, const std::vector<std::string>& args, std::ostream& cout) {
             CommandLineArgument{'d', "decrypt", "\tdecrypt file using AES", false},
             CommandLineArgument{'s', "hash", "\tcreate hash", false},
             CommandLineArgument{'v', "verify", "\tverify hash, value: hash to compare", true},
-            CommandLineArgument{'r', "random", "\tgenerate random initialization vector, for encryption only", false}
+            CommandLineArgument{'r', "rand", "\tgenerate random initialization vector, for encryption only", false}
     };
 
     ApplicationHelp a{"Crypto-project", "Jiří Horák", "description", appArgs, ApplicationVersion{1, 0},
-                      "command template: [input file] [output file] [action] [cipher: key 16 bytes, / hash: hash to compare | in hex string] [cipher only: init vector (will use zeros if not present) OR --rand for encryption only]"};
+                      "command template: [input file] [output file] [action] [key 16 bytes (cipher) / hash to compare (verify) | in hex string] [cipher only: init vector (use zeros if not present) OR --rand for encryption only]"};
 
     if (argc < 3) {
         printApplicationHelp(a, cout);
@@ -137,7 +137,7 @@ int app(int argc, const std::vector<std::string>& args, std::ostream& cout) {
         return 1;
     }
 
-    std::ofstream out{args[2], std::ios::binary | std::ios::out}; //std::ios::binary
+    std::ofstream out{args[2], std::ios::binary | std::ios::out};
     if (!out.is_open()) {
         std::cerr << "Failed to write into file " << args[1] << '\n';
         return 1;

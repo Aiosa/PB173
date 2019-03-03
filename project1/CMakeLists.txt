@@ -25,6 +25,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/long.txt ${CMAKE_CURRENT_BINARY_
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/out.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/no_permissions.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/corrupted.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/corrupt1.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/corrupt2.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_test(test_p1_run test_p1)
 

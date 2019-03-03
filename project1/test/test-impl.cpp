@@ -423,7 +423,9 @@ TEST_CASE("FILE errors") {
     CHECK(app(5, std::vector<std::string>{"program.exe", "no_permissions.txt", "out.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout) == 1);
     CHECK(app(5, std::vector<std::string>{"program.exe", "long.txt", "no_permissions.txt", "--encrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout) == 1);
 
-    //corrupted file
+    //corrupted encrypted files with different corruption approach, correct IV and keys
+    CHECK_THROWS_AS(app(5, std::vector<std::string>{"program.exe", "corrupt1.txt", "out_corrupt.txt", "--decrypt", "217A25432A462D4A404E635266556A58", "258D9BEC2E860EA54311E4FD74DA4A77"}, std::cout), std::runtime_error);
+    CHECK_THROWS_AS(app(5, std::vector<std::string>{"program.exe", "corrupt2.txt", "out_corrupt.txt", "--decrypt", "217A25432A462D4A404E635266556A58", "258D9BEC2E860EA54311E4FD74DA4A77"}, std::cout), std::runtime_error);
     CHECK_THROWS_AS(app(5, std::vector<std::string>{"program.exe", "corrupted.txt", "out_corrupt.txt", "--decrypt", "30c81c46a35ce411e5fbc1191a0a52ef"}, std::cout), std::runtime_error);
 }
 

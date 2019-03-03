@@ -9,16 +9,16 @@
 #include <vector>
 #include <fstream>
 
-
 #include "CipherWrapper.hpp"
 #include "SHAWrapper.hpp"
 #include "Print.hpp"
 
 template<size_t len>
 size_t read_n(std::istream &in, unsigned char *data) {
-    //char temp[len];
+    //ugly old C cast
     in.read((char *) data, len);
-    //the "nice way"
+    
+//    the "nice C++ cast-way"
 //    std::transform(temp, temp + len, data, [](const char &c) {
 //        return static_cast<unsigned char>(c);
 //    });
